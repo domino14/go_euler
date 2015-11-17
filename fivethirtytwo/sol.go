@@ -24,15 +24,23 @@ type Nanobot struct {
 
 // travel towards nanobot r
 func (n *Nanobot) travel(r *Nanobot) bool {
-	d := geodesicDistance(n, r)
+	sinLat, cosLat := math.Sincos(n.lat)
+	// A simplified version of the geodesic distance equation.
+	sqrt_intermed := cosLat * sqrt_hav_londiff
+	d := 2 * math.Asin(sqrt_intermed)
+	// sin 2x = 2 sinx cosx
+	// so sin of d is sin of 2 * x
+	// = 2 sin (Asin(sqrt_intermed)) cos(Asin(sqrt_intermed))
+	// = 2 * sqrt_intermed * cos(Asin(sqrt_intermed))
+	// = 2 * sqrt_intermed * sqrt(1 - sqrt_intermed*sqrt_intermed)
 	if d < Epsilon {
 		log.Println("Got there!")
 		return false
 	}
-	sinD := math.Sin(d)
-	// Latitudes of two adjacent robots are always the same by symmetry.
-	sinLat, cosLat := math.Sincos(n.lat)
+	// sinD := math.Sin(d)
+	sinD := 2 * sqrt_intermed * math.Sqrt(1-sqrt_intermed*sqrt_intermed)
 	// longitude is always reset back to 0 after every iteration.
+	// latitude of all robots is the same by symmetry.
 	distTraveled := TinyStepSize * d
 	A := math.Sin(d-distTraveled) / sinD
 	B := math.Sin(distTraveled) / sinD
@@ -55,11 +63,7 @@ func (n *Nanobot) String() string {
 var sin_londiff float64
 var cos_londiff float64
 var hav_londiff float64
-
-func geodesicDistance(n1 *Nanobot, n2 *Nanobot) float64 {
-	d := math.Cos(n1.lat) * math.Cos(n2.lat) * hav_londiff
-	return 2 * math.Asin(math.Sqrt(d))
-}
+var sqrt_hav_londiff float64
 
 // This function is only used once, does not need optimization.
 func smallCircleLatitude(radius float64) float64 {
@@ -83,6 +87,7 @@ func GetLengthForRobots(n int) float64 {
 	lon_diff := 2 * math.Pi / float64(n)
 	sin_londiff, cos_londiff = math.Sincos(lon_diff)
 	hav_londiff = math.Pow(math.Sin(lon_diff/2), 2.0)
+	sqrt_hav_londiff = math.Sin(lon_diff / 2)
 	traveling := true
 	iterations := 0
 
@@ -92,5 +97,6 @@ func GetLengthForRobots(n int) float64 {
 		robots[1].lat = robots[0].lat
 		robots[1].lon = robots[0].lon + lon_diff
 	}
+	log.Println("Iterations:", iterations)
 	return robots[0].traveled * float64(n)
 }
