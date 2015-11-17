@@ -1,13 +1,17 @@
 package main
 
-import "github.com/domino14/go_euler/fivethirtytwo"
-import "fmt"
+import (
+	"flag"
+	"fmt"
+	"github.com/domino14/go_euler/fivethirtytwo"
+)
 
 func main() {
-	n := 100
-
+	var nip = flag.Int("numrobots", 3, "The number of robots")
+	flag.Parse()
 	// n = 1034 robots. Found this by trial and error. Definitely not
 	// under a minute...
+	n := *nip
 	for true {
 		l := fivethirtytwo.GetLengthForRobots(n)
 		perRobot := l / float64(n)

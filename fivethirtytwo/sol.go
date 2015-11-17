@@ -30,20 +30,20 @@ func (n *Nanobot) travel(r *Nanobot) bool {
 		return false
 	}
 	sinD := math.Sin(d)
+	// Latitudes of two adjacent robots are always the same by symmetry.
 	sinLat, cosLat := math.Sincos(n.lat)
-	sinLon, cosLon := math.Sincos(n.lon)
-	sinRLat, cosRLat := math.Sincos(r.lat)
-	sinRLon, cosRLon := math.Sincos(r.lon)
+	// longitude is always reset back to 0 after every iteration.
 	distTraveled := TinyStepSize * d
 	A := math.Sin(d-distTraveled) / sinD
 	B := math.Sin(distTraveled) / sinD
 	Acoslat := A * cosLat
-	Bcosrlat := B * cosRLat
-	x := Acoslat*cosLon + Bcosrlat*cosRLon
-	y := Acoslat*sinLon + Bcosrlat*sinRLon
-	z := A*sinLat + B*sinRLat
+	Bcosrlat := B * cosLat
+	x := Acoslat + Bcosrlat*cos_londiff
+	y := Bcosrlat * sin_londiff
+	z := sinLat * (A + B)
 	n.lat = math.Atan2(z, math.Sqrt(x*x+y*y))
-	n.lon = math.Atan2(y, x)
+	// Rotate sphere back to longitude 0. This problem is symmetric.
+	n.lon = 0
 	n.traveled += distTraveled
 	return true
 }
@@ -53,6 +53,8 @@ func (n *Nanobot) String() string {
 }
 
 var HavMemo map[float64]float64
+var sin_londiff float64
+var cos_londiff float64
 
 func haversine(angle float64) float64 {
 	if val, ok := HavMemo[angle]; ok {
@@ -95,6 +97,8 @@ func GetLengthForRobots(n int) float64 {
 	}
 	robots := place_robots(n)
 	lon_diff := 2 * math.Pi / float64(n)
+	sin_londiff, cos_londiff = math.Sincos(lon_diff)
+
 	traveling := true
 	iterations := 0
 
@@ -104,5 +108,6 @@ func GetLengthForRobots(n int) float64 {
 		robots[1].lat = robots[0].lat
 		robots[1].lon = robots[0].lon + lon_diff
 	}
+	log.Println("At end, memo sizes", len(HavMemo))
 	return robots[0].traveled * float64(n)
 }
