@@ -27,6 +27,7 @@ func (n *Nanobot) travel(r *Nanobot) bool {
 	sinLat, cosLat := math.Sincos(n.lat)
 	// A simplified version of the geodesic distance equation.
 	sqrt_intermed := cosLat * sqrt_hav_londiff
+	intermed := sqrt_intermed * sqrt_intermed
 	d := 2 * math.Asin(sqrt_intermed)
 	// sin 2x = 2 sinx cosx
 	// so sin of d is sin of 2 * x
@@ -38,12 +39,24 @@ func (n *Nanobot) travel(r *Nanobot) bool {
 		return false
 	}
 	// sinD := math.Sin(d)
-	sinD := 2 * sqrt_intermed * math.Sqrt(1-sqrt_intermed*sqrt_intermed)
+	sinD := 2 * sqrt_intermed * math.Sqrt(1-intermed)
+	//cosD := math.Sqrt(1 - sinD*sinD)
+	// sinD * sinD = 4 * intermed * (1 - intermed)
+	// = 4I * (1 - I)
+	// then math.Sqrt( 1 -(4I (1-I))) ==
+	// 1 - (4I - 4II) = 1-4I + 4II = (2I - 1)^2
+	// so cosD is just 2 I -1
+	cosD := 2*intermed - 1
+
 	// longitude is always reset back to 0 after every iteration.
 	// latitude of all robots is the same by symmetry.
 	distTraveled := TinyStepSize * d
-	A := math.Sin(d-distTraveled) / sinD
-	B := math.Sin(distTraveled) / sinD
+	sin_dist, cos_dist := math.Sincos(distTraveled)
+
+	//A := math.Sin(d-distTraveled) / sinD
+	A := cos_dist - (cosD * sin_dist / sinD)
+	B := sin_dist / sinD
+
 	Acoslat := A * cosLat
 	Bcosrlat := B * cosLat
 	x := Acoslat + Bcosrlat*cos_londiff
