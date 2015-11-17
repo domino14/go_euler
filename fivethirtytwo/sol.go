@@ -52,25 +52,12 @@ func (n *Nanobot) String() string {
 	return fmt.Sprintf("id: %v, lat: %v, lon: %v", n.id, n.lat, n.lon)
 }
 
-var HavMemo map[float64]float64
 var sin_londiff float64
 var cos_londiff float64
-
-func haversine(angle float64) float64 {
-	if val, ok := HavMemo[angle]; ok {
-		return val
-	} else {
-		sin := math.Sin(angle / 2)
-		HavMemo[angle] = sin * sin
-		return HavMemo[angle]
-	}
-}
+var hav_londiff float64
 
 func geodesicDistance(n1 *Nanobot, n2 *Nanobot) float64 {
-	deltaLat := n1.lat - n2.lat
-	deltaLon := n1.lon - n2.lon
-	d := haversine(deltaLat) +
-		math.Cos(n1.lat)*math.Cos(n2.lat)*haversine(deltaLon)
+	d := math.Cos(n1.lat) * math.Cos(n2.lat) * hav_londiff
 	return 2 * math.Asin(math.Sqrt(d))
 }
 
@@ -92,13 +79,10 @@ func place_robots(n int) []*Nanobot {
 }
 
 func GetLengthForRobots(n int) float64 {
-	if HavMemo == nil {
-		HavMemo = make(map[float64]float64)
-	}
 	robots := place_robots(n)
 	lon_diff := 2 * math.Pi / float64(n)
 	sin_londiff, cos_londiff = math.Sincos(lon_diff)
-
+	hav_londiff = math.Pow(math.Sin(lon_diff/2), 2.0)
 	traveling := true
 	iterations := 0
 
@@ -108,6 +92,5 @@ func GetLengthForRobots(n int) float64 {
 		robots[1].lat = robots[0].lat
 		robots[1].lon = robots[0].lon + lon_diff
 	}
-	log.Println("At end, memo sizes", len(HavMemo))
 	return robots[0].traveled * float64(n)
 }
