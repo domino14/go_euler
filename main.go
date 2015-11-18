@@ -23,11 +23,10 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	// n = 1034 robots. Found this by trial and error. Definitely not
+	// n = 830 robots. Found this by trial and error. Definitely not
 	// under a minute...
 	n := *nip
-	// for true {
-	for n = 3; n < 8; n++ {
+	for true {
 		l := fivethirtytwo.GetLengthForRobots(n)
 		perRobot := l / float64(n)
 		fmt.Println("Length for", n, "robots is", l, "per_robot", perRobot)
