@@ -3,15 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/domino14/go_euler/fivethirtytwo"
 	"log"
 	"os"
 	"runtime/pprof"
+
+	"github.com/domino14/go_euler/eightynine"
+	"github.com/domino14/go_euler/fivethirtytwo"
 )
 
-func main() {
+func mainRobots532() {
 	var nip = flag.Int("numrobots", 3, "The number of robots")
-	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	var cpuprofile = flag.String("cpuprofile", "", "Write cpu profile to file")
+	var cont = flag.Bool("continue", false, "Loop until solution is found.")
 
 	flag.Parse()
 	if *cpuprofile != "" {
@@ -26,7 +29,7 @@ func main() {
 	// n = 830 robots. Found this by trial and error. Definitely not
 	// under a minute...
 	n := *nip
-	for true {
+	for {
 		l := fivethirtytwo.GetLengthForRobots(n)
 		perRobot := l / float64(n)
 		fmt.Println("Length for", n, "robots is", l, "per_robot", perRobot)
@@ -35,5 +38,12 @@ func main() {
 			break
 		}
 		n += 1
+		if *cont == false {
+			break
+		}
 	}
+}
+
+func main() {
+	eightynine.Solve()
 }

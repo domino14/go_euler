@@ -9,6 +9,7 @@ import (
 const (
 	TinyStepSize = 1e-7
 	Epsilon      = 1e-6
+	PiOver2      = math.Pi / 2
 	// TinyStepSize = 0.00048828125
 	// Epsilon      = 0.00390625
 )
@@ -24,23 +25,27 @@ type Nanobot struct {
 
 // travel towards nanobot r
 func (n *Nanobot) travel(r *Nanobot) bool {
+	if PiOver2-n.lat < Epsilon {
+		log.Println("Got there!", n)
+		return false
+	}
 	sinLat, cosLat := math.Sincos(n.lat)
+	// log.Println("n.lat", n.lat)
 	// A simplified version of the geodesic distance equation.
 	sqrt_intermed := cosLat * sqrt_hav_londiff
-	d := 2 * math.Asin(sqrt_intermed)
+	// d := 2 * math.Asin(sqrt_intermed)
 	// sin 2x = 2 sinx cosx
 	// so sin of d is sin of 2 * x
 	// = 2 sin (Asin(sqrt_intermed)) cos(Asin(sqrt_intermed))
 	// = 2 * sqrt_intermed * cos(Asin(sqrt_intermed))
 	// = 2 * sqrt_intermed * sqrt(1 - sqrt_intermed*sqrt_intermed)
-	if d < Epsilon {
-		log.Println("Got there!", n)
-		return false
-	}
+
 	intermed := sqrt_intermed * sqrt_intermed
 	// sinD := math.Sin(d)
 	sinD := 2 * sqrt_intermed * math.Sqrt(1-intermed)
+	// log.Println("1-intermed", 1-intermed)
 	cosD := math.Sqrt(1 - sinD*sinD)
+	// log.Println("1-sinDsinD", 1-sinD*sinD)
 	// sinD * sinD = 4 * intermed * (1 - intermed)
 	// = 4I * (1 - I)
 	// then math.Sqrt( 1 -(4I (1-I))) ==
@@ -60,7 +65,12 @@ func (n *Nanobot) travel(r *Nanobot) bool {
 	x := Acoslat + Bcosrlat*cos_londiff
 	y := Bcosrlat * sin_londiff
 	z := sinLat * (A + B)
+	// log.Println("Atan2args", z, x*x+y*y)
 	n.lat = math.Atan2(z, math.Sqrt(x*x+y*y))
+
+	// fmt.Println("Bearing", math.Atan2(lon_diff*cosLat,
+	// 	cosLat*sinLat*(1-cos_londiff)))
+
 	// Rotate sphere back to longitude 0. This problem is symmetric.
 	n.lon = 0
 	n.traveled += TinyStepSize
@@ -74,6 +84,7 @@ func (n *Nanobot) String() string {
 var sin_londiff float64
 var cos_londiff float64
 var hav_londiff float64
+var lon_diff float64
 var sqrt_hav_londiff float64
 var cos_stepsize float64
 var sin_stepsize float64
@@ -97,7 +108,7 @@ func place_robots(n int) []*Nanobot {
 
 func GetLengthForRobots(n int) float64 {
 	robots := place_robots(n)
-	lon_diff := 2 * math.Pi / float64(n)
+	lon_diff = 2 * math.Pi / float64(n)
 	sin_londiff, cos_londiff = math.Sincos(lon_diff)
 	hav_londiff = math.Pow(math.Sin(lon_diff/2), 2.0)
 	sqrt_hav_londiff = math.Sin(lon_diff / 2)
