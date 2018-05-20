@@ -8,7 +8,7 @@ import (
 	"runtime/pprof"
 
 	"github.com/domino14/go_euler/fivethirtytwo"
-	"github.com/domino14/go_euler/sixty"
+	"github.com/domino14/go_euler/sixtyone"
 )
 
 func mainRobots532() {
@@ -45,5 +45,5 @@ func mainRobots532() {
 }
 
 func main() {
-	sixty.Solve()
+	sixtyone.Solve()
 }
