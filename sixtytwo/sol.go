@@ -1,21 +1,26 @@
 package sixtytwo
 
-import "fmt"
-
-var cubes map[uint64]uint64 // key is the cube, value is the root
-const (
-	Limit = 100000
+import (
+	"fmt"
+	"sort"
+	"strconv"
 )
 
-func populateCubes() {
-	cubes = make(map[uint64]uint64)
-	var i uint64
-	for i = 1; i < Limit; i++ {
-		cubes[i*i*i] = i
-	}
+const (
+	Limit = 20000
+)
+
+// A map of "alphagrams" to slices of cube numbers
+var alphas map[string][]string
+
+func alphagrammize(n uint64) string {
+	// Sort alphabetically.
+	x := decomposeInt(n)
+	sort.Ints(x)
+	return joinIntoString(x)
 }
 
-// Decompose into an array of ints
+// // Decompose into an array of ints
 func decomposeInt(n uint64) []int {
 	ret := []int{}
 	rem := uint64(0)
@@ -26,49 +31,38 @@ func decomposeInt(n uint64) []int {
 	return ret
 }
 
-func joinIntoInt(arr []int) uint64 {
-	x := uint64(0)
-	o := 1
-	for i := len(arr) - 1; i >= 0; i-- {
-		x += uint64(o) * uint64(arr[i])
-		o *= 10
+func joinIntoString(arr []int) string {
+	str := ""
+	for _, d := range arr {
+		str += strconv.Itoa(d)
 	}
-	return x
-}
-
-func permutationsAreCubes(cube uint64) int {
-	// Return how many permutations are cubes.
-	orig := decomposeInt(cube)
-
-	p := NewPermutation(orig)
-
-	uniqueCubes := map[uint64]bool{}
-
-	for next := p.Next(); next != nil; next = p.Next() {
-		perm := joinIntoInt(next)
-		if _, found := cubes[perm]; found {
-			// Let's not count leading zeros, as the PE problem doesn't
-			// seem to count them properly. (otherwise 1000000 should be
-			// the first answer: 0000001, 0010000, and 1000000 are cubes)
-			if next[0] != 0 {
-				uniqueCubes[perm] = true
-			}
-		}
-	}
-	return len(uniqueCubes)
+	return str
 }
 
 func Solve() {
-	populateCubes()
+	alphas = make(map[string][]string)
 	for i := uint64(1); i < Limit; i++ {
-		cube := i * i * i
-		if permutationsAreCubes(cube) == 5 {
-			fmt.Println(cube)
-			break
+		c := i * i * i
+		alph := alphagrammize(c)
+		if _, ok := alphas[alph]; !ok {
+			alphas[alph] = []string{}
 		}
-		if i%10 == 0 {
-			fmt.Println("Checking", i, cube)
+		alphas[alph] = append(alphas[alph], joinIntoString(decomposeInt(c)))
+		sort.Strings(alphas[alph])
+
+		if i%100000 == 0 {
+			fmt.Println("Computing...", i)
 		}
 	}
+	final := []string{}
+	// Then go through the map
+	for _, sl := range alphas {
+		if len(sl) == 5 {
+			final = append(final, sl[0])
+		}
 
+	}
+	sort.Strings(final)
+	//fmt.Println(final)
+	fmt.Println(final[0])
 }
